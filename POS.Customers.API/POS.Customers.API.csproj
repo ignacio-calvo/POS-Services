@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>5204c7dd-8a1b-4ce9-8643-414eb5ceca76</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <Configurations>Debug;Release</Configurations>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.7.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.7.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\POS.CommonBase\POS.CommonBase.csproj" />
+    <ProjectReference Include="..\POS.Customers.Business\POS.Customers.Business.csproj" />
+    <ProjectReference Include="..\POS.Customers.Data\POS.Customers.Data.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,103 @@
+version: '3.4'
+services:
+  pos.identity.api:
+    image: ${DOCKER_REGISTRY-}posidentityapi
+    build:
+      context: .
+      dockerfile: POS.Identity.API/Dockerfile 
+    depends_on:
+      - possqlserver
+    networks:
+      - posnetwork
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${ASPNETCOREKestrelCertificatesDefaultPassword}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - IdentityDBPassword=${IdentityDBPassword} # Need to pass by an environment variable for the DB or set one up in an .env file. 
+      - IdentityJwtKey=#{IdentityJwtKey} # Need to pass by an environment variable for the JWT Key or set one up in an .env file.
+    volumes:
+      - ~/.aspnet/https:/https:ro
+    env_file:
+      - .env
+    ports:
+      - "5001:8080"  # Map host port 5001 to container HTTP port 8080
+      - "7010:8081"  # Map host port 7010 to container HTTPs port 8081
+  pos.customers.api:
+    image: ${DOCKER_REGISTRY-}poscustomersapi
+    build:
+      context: .
+      dockerfile: POS.Customers.API/Dockerfile 
+    depends_on:
+      - possqlserver
+    networks:
+      - posnetwork
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${ASPNETCOREKestrelCertificatesDefaultPassword}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - CustomerDBPassword=${CustomerDBPassword} # Need to pass by an environment variable for the DB or set one up in an .env file. 
+    volumes:
+      - ~/.aspnet/https:/https:ro
+    env_file:
+      - .env
+    ports:
+      - "5005:8080"  # Map host port 5005 to container HTTP port 8080
+      - "7030:8081"  # Map host port 7030 to container HTTPs port 8081
+  pos.orders.api:
+    image: ${DOCKER_REGISTRY-}posordersapi
+    build:
+      context: .
+      dockerfile: POS.Orders.API/Dockerfile
+    depends_on:
+      - possqlserver
+    networks:
+      - posnetwork
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${ASPNETCOREKestrelCertificatesDefaultPassword}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - OrderDBPassword=${OrderDBPassword} # Need to pass by an environment variable for the DB or set one up in an .env file. 
+    volumes:
+      - ~/.aspnet/https:/https:ro
+    env_file:
+      - .env
+    ports:
+      - "5006:8080"  # Map host port 5006 to container HTTP port 8080
+      - "7130:8081"  # Map host port 7130 to container HTTPs port 8081
+  pos.products.api:
+    image: ${DOCKER_REGISTRY-}posproductsapi
+    build:
+      context: .
+      dockerfile: POS.Products.API/Dockerfile
+    depends_on:
+      - possqlserver
+    networks:
+      - posnetwork
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${ASPNETCOREKestrelCertificatesDefaultPassword}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - ProductDBPassword=${ProductDBPassword} # Need to pass by an environment variable for the DB or set one up in an .env file. 
+    volumes:
+      - ~/.aspnet/https:/https:ro
+    env_file:
+      - .env
+    ports:
+      - "5007:8080"  # Map host port 5007 to container HTTP port 8080 
+      - "7230:8081"  # Map host port 7230 to container HTTPs port 8081
+  possqlserver:
+    container_name: possqlserver
+    hostname: possqlserver
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "1433:1433"
+    env_file:
+      - .env
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+    networks:
+      - posnetwork
+networks:
+  posnetwork:
+    driver: bridge
