@@ -13,7 +13,8 @@ Solution has been dockerized and orchestrated using Docker Compose.
 ## Getting Started
 
 You need to have Docker installed in your system. 
-You will need to create a ".env" file in the root path containing the variables and values needed by the docker-compose.yaml (The ones following the "${Variable}" format).
+You will need to create a ".env" file in the root path right next to the docker-compose.yaml 
+Setup environment variables needed by the docker-compose.yml in the ".env" file (The ones following the "${Variable}" format).
 
 Content of your .env file may look something like: 
 
