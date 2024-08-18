@@ -53,7 +53,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
              ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
 
-// Replace the placeholder in the configuration with the actual JWT key
+// Explicitly set the configuration value for Jwt:Key
 builder.Configuration["Jwt:Key"] = jwtKey;
 
 builder.Services.AddAuthentication(options =>
