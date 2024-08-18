@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using POS.Products.Business.Mappings;
 using POS.Products.Business.Services;
 using POS.Products.Business.Services.IServices;
@@ -28,9 +29,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers()
-    //.AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
-//builder.Services.AddDbContext<ProductDbContext>(optionsAction:options => options.UseSqlServer());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -69,11 +68,13 @@ builder.Services.AddScoped(typeof(ICategoryRepository), typeof(CategoryRepositor
 // Generic Services
 builder.Services.AddScoped(typeof(IReadServiceAsync<,>), typeof(ReadServiceAsync<,>));
 builder.Services.AddScoped(typeof(IGenericServiceAsync<,>), typeof(GenericServiceAsync<,>));
-//////////////////////////////////// Services ////////////////////////////////////
 
 // Asset Mappings
 builder.Services.AddScoped(typeof(IProductService), typeof(ProductService));
 builder.Services.AddScoped(typeof(ICategoryService), typeof(CategoryService));
+
+// Add MemoryCache service
+builder.Services.AddMemoryCache();
 
 var app = builder.Build();
 
@@ -91,14 +92,9 @@ else
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseCors(MyAllowSpecificOrigins);
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

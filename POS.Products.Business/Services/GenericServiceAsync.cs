@@ -3,17 +3,19 @@ using POS.Products.Business.DTOs;
 using POS.Products.Data.Models;
 using POS.Products.Business.Services.IServices;
 using POS.Products.Data.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace POS.Products.Business.Services
 {
     public class GenericServiceAsync<TEntity, TDto> : ReadServiceAsync<TEntity, TDto>, IGenericServiceAsync<TEntity, TDto>
-        where TEntity : class
-        where TDto : class
+            where TEntity : class
+            where TDto : class
     {
         private readonly IMapper _mapper;
         private readonly IGenericRepository<TEntity> _repository;
 
-        public GenericServiceAsync(IGenericRepository<TEntity> repository, IMapper mapper) : base(repository, mapper)
+        public GenericServiceAsync(IGenericRepository<TEntity> repository, IMapper mapper, IMemoryCache cache)
+            : base(repository, mapper, cache)
         {
             _repository = repository;
             _mapper = mapper;

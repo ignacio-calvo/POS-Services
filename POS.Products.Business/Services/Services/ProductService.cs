@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Caching.Memory;
 using POS.Products.Business.CustomExceptions;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -10,11 +11,14 @@ namespace POS.Products.Business.Services.ServiceMappings
     {
         private readonly IMapper _mapper;
         private readonly IProductRepository _repository;
+        private readonly IMemoryCache _cache;
 
-        public ProductService(IProductRepository repository, IMapper mapper) : base(repository, mapper)
+        public ProductService(IProductRepository repository, IMapper mapper, IMemoryCache cache)
+            : base(repository, mapper, cache)
         {
             _repository = repository;
             _mapper = mapper;
+            _cache = cache;
         }
 
         public async Task<bool> ExistsAsync(int id)
@@ -30,11 +34,9 @@ namespace POS.Products.Business.Services.ServiceMappings
 
                 return result;
             }
-
             catch (EntityNotFoundException ex)
             {
-                var message = $"Error retrieving {typeof(CategoryDto).Name} with Id: {id}";
-
+                var message = $"Error retrieving {typeof(ProductDto).Name} with Id: {id}";
                 throw new EntityNotFoundException(message, ex);
             }
         }

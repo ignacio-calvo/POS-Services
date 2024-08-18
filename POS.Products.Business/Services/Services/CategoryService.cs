@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Caching.Memory;
 using POS.Products.Business.CustomExceptions;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -12,11 +13,15 @@ namespace POS.Products.Business.Services.ServiceMappings
     {
         private readonly IMapper _mapper;
         private readonly ICategoryRepository _repository;
+        private readonly IMemoryCache _cache;
+        private readonly TimeSpan _cacheDuration = TimeSpan.FromDays(1);
 
-        public CategoryService(ICategoryRepository repository, IMapper mapper) : base(repository, mapper)
+        public CategoryService(ICategoryRepository repository, IMapper mapper, IMemoryCache cache)
+            : base(repository, mapper, cache)
         {
             _repository = repository;
             _mapper = mapper;
+            _cache = cache;
         }
 
         public async Task<bool> ExistsAsync(int id)
@@ -32,61 +37,81 @@ namespace POS.Products.Business.Services.ServiceMappings
 
                 return result;
             }
-
             catch (EntityNotFoundException ex)
             {
                 var message = $"Error retrieving {typeof(CategoryDto).Name} with Id: {id}";
-
                 throw new EntityNotFoundException(message, ex);
             }
         }
 
         public async Task<IEnumerable<CategoryDto>> GetAllWithProductsAsync()
         {
-            try
+            const string cacheKey = "all_categories_with_products";
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto> cachedCategories))
             {
-                var result = await _repository.GetAllCategoriesWithProductsAsync();
-
-                if (result.Any())
+                try
                 {
-                    return _mapper.Map<IEnumerable<CategoryDto>>(result);
+                    var result = await _repository.GetAllCategoriesWithProductsAsync();
+
+                    if (result.Any())
+                    {
+                        cachedCategories = _mapper.Map<IEnumerable<CategoryDto>>(result);
+
+                        var cacheEntryOptions = new MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = _cacheDuration
+                        };
+
+                        _cache.Set(cacheKey, cachedCategories, cacheEntryOptions);
+                    }
+                    else
+                    {
+                        throw new EntityNotFoundException($"No {typeof(CategoryDto).Name}s were found");
+                    }
                 }
-                else
+                catch (EntityNotFoundException ex)
                 {
-                    throw new EntityNotFoundException($"No {typeof(CategoryDto).Name}s were found");
+                    var message = $"Error retrieving all {typeof(CategoryDto).Name}s";
+                    throw new EntityNotFoundException(message, ex);
                 }
-
             }
-            catch (EntityNotFoundException ex)
-            {
-                var message = $"Error retrieving all {typeof(CategoryDto).Name}s";
 
-                throw new EntityNotFoundException(message, ex);
-            }
+            return cachedCategories;
         }
+
         public async Task<IEnumerable<CategoryDto>> GetAllWithProductsSizesAsync()
         {
-            try
+            const string cacheKey = "all_categories_with_products_sizes";
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto> cachedCategories))
             {
-                var result = await _repository.GetAllCategoriesWithProductsSizesAsync();
-
-                if (result.Any())
+                try
                 {
-                    return _mapper.Map<IEnumerable<CategoryDto>>(result);
+                    var result = await _repository.GetAllCategoriesWithProductsSizesAsync();
+
+                    if (result.Any())
+                    {
+                        cachedCategories = _mapper.Map<IEnumerable<CategoryDto>>(result);
+
+                        var cacheEntryOptions = new MemoryCacheEntryOptions
+                        {
+                            AbsoluteExpirationRelativeToNow = _cacheDuration
+                        };
+
+                        _cache.Set(cacheKey, cachedCategories, cacheEntryOptions);
+                    }
+                    else
+                    {
+                        throw new EntityNotFoundException($"No {typeof(CategoryDto).Name}s were found");
+                    }
                 }
-                else
+                catch (EntityNotFoundException ex)
                 {
-                    throw new EntityNotFoundException($"No {typeof(CategoryDto).Name}s were found");
+                    var message = $"Error retrieving all {typeof(CategoryDto).Name}s";
+                    throw new EntityNotFoundException(message, ex);
                 }
-
             }
-            catch (EntityNotFoundException ex)
-            {
-                var message = $"Error retrieving all {typeof(CategoryDto).Name}s";
 
-                throw new EntityNotFoundException(message, ex);
-            }
+            return cachedCategories;
         }
-
     }
 } 
