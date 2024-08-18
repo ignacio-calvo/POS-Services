@@ -9,6 +9,9 @@ var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add user secrets to the configuration
+builder.Configuration.AddUserSecrets<Program>();
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -26,9 +29,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Read the environment variable for the database password
+// Read the value for the database password. First try reading from within Environment Variable, if that fails fall back to read from .NET Secret Manager
 var identityDbPassword = Environment.GetEnvironmentVariable("IdentityDBPassword")
-                      ?? throw new InvalidOperationException("Environment variable 'IdentityDBPassword' not found.");
+                      ?? builder.Configuration["IdentityDBPassword"]
+                      ?? throw new InvalidOperationException("Environment variable or secret 'IdentityDBPassword' not found.");
 
 // Get the connection string and replace the placeholder with the actual password
 string connectionString = builder.Configuration.GetConnectionString("IdentityDB")
@@ -49,12 +53,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         });
 });
 
-// Read the environment variable for the JWT key
+// Read the secret for the JWT key
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
-             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+             ?? builder.Configuration["IdentityJwtKey"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'IdentityJwtKey' not found.");
 
-// Explicitly set the configuration value for Jwt:Key
+// Read the issuer for the JWT
+var jwtIssuer = Environment.GetEnvironmentVariable("JwtIssuer")
+                ?? builder.Configuration["Jwt:Issuer"]
+                ?? throw new InvalidOperationException("Environment variable or secret 'Jwt:Issuer' not found.");
+
+// Read the audience for the JWT
+var jwtAudience = Environment.GetEnvironmentVariable("JwtAudience")
+                 ?? builder.Configuration["Jwt:Audience"]
+                 ?? throw new InvalidOperationException("Environment variable or secret 'Jwt:Audience' not found.");
+
+// Explicitly set the configuration values for Jwt:Key, Jwt:Issuer, and Jwt:Audience
 builder.Configuration["Jwt:Key"] = jwtKey;
+builder.Configuration["Jwt:Issuer"] = jwtIssuer;
+builder.Configuration["Jwt:Audience"] = jwtAudience;
 
 builder.Services.AddAuthentication(options =>
 {
@@ -70,7 +87,7 @@ builder.Services.AddAuthentication(options =>
                ValidateLifetime = true,
                ValidateIssuerSigningKey = true,
                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-               ValidAudience = builder.Configuration["Jwt:Issuer"],
+               ValidAudience = builder.Configuration["Jwt:Audience"],
                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
            };
        });
@@ -102,7 +119,10 @@ app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
     context.Database.Migrate();
 }
 

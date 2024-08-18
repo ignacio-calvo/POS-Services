@@ -15,6 +15,9 @@ var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add user secrets to the configuration
+builder.Configuration.AddUserSecrets<Program>();
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -36,13 +39,15 @@ builder.Services.AddSwaggerGen();
 // Read JWT settings from configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
-// Read the Authority from the environment variable
+// Read the Authority from the environment variable or fallback to .NET secrets
 var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
-                    ?? throw new InvalidOperationException("Environment variable 'IDENTITY_API_URL' not found.");
+                    ?? builder.Configuration["IDENTITY_API_URL"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'IDENTITY_API_URL' not found.");
 
-// Read the JWT key from the environment variable
+// Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
-             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+             ?? builder.Configuration["IdentityJwtKey"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'IdentityJwtKey' not found.");
 
 // Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -64,12 +69,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-// Data Base Configuration
+// Database Configuration
 builder.Services.AddScoped<OrderDbContext>();
 
-// Read the environment variable for the database password
+// Read the environment variable for the database password or fallback to .NET secrets
 var orderDbPassword = Environment.GetEnvironmentVariable("OrderDBPassword")
-                      ?? throw new InvalidOperationException("Environment variable 'OrderDBPassword' not found.");
+                      ?? builder.Configuration["OrderDBPassword"]
+                      ?? throw new InvalidOperationException("Environment variable or secret 'OrderDBPassword' not found.");
 
 // Get the connection string and replace the placeholder with the actual password
 string connectionString = builder.Configuration.GetConnectionString("OrderDB")
@@ -98,9 +104,8 @@ builder.Services.AddScoped(typeof(IOrderRepository), typeof(OrderRepository));
 // Generic Services
 builder.Services.AddScoped(typeof(IReadServiceAsync<,>), typeof(ReadServiceAsync<,>));
 builder.Services.AddScoped(typeof(IGenericServiceAsync<,>), typeof(GenericServiceAsync<,>));
-//////////////////////////////////// Services ////////////////////////////////////
 
-// Asset Mappings
+// Specific Services
 builder.Services.AddScoped(typeof(IOrderService), typeof(OrderService));
 
 var app = builder.Build();

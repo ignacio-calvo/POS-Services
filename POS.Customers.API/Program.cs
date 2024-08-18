@@ -15,6 +15,9 @@ var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add user secrets to the configuration
+builder.Configuration.AddUserSecrets<Program>();
+
 // Add services to the container.
 builder.Services.AddCors(options =>
 {
@@ -36,13 +39,15 @@ builder.Services.AddSwaggerGen();
 // Read JWT settings from configuration
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
-// Read the Authority from the environment variable
+// Read the Authority from the environment variable or fallback to .NET secrets
 var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
-                    ?? throw new InvalidOperationException("Environment variable 'IDENTITY_API_URL' not found.");
+                    ?? builder.Configuration["IDENTITY_API_URL"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'IDENTITY_API_URL' not found.");
 
-// Read the JWT key from the environment variable
+// Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
-             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+             ?? builder.Configuration["IdentityJwtKey"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'IdentityJwtKey' not found.");
 
 // Add Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -67,9 +72,10 @@ builder.Services.AddAuthorization();
 // Database Configuration
 builder.Services.AddScoped<CustomerDbContext>();
 
-// Read the environment variable for the database password
+// Read the environment variable for the database password or fallback to .NET secrets
 var customerDbPassword = Environment.GetEnvironmentVariable("CustomerDBPassword")
-                      ?? throw new InvalidOperationException("Environment variable 'CustomerDBPassword' not found.");
+                      ?? builder.Configuration["CustomerDBPassword"]
+                      ?? throw new InvalidOperationException("Environment variable or secret 'CustomerDBPassword' not found.");
 
 // Get the connection string and replace the placeholder with the actual password
 string connectionString = builder.Configuration.GetConnectionString("CustomerDB")
