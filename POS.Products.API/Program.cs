@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using POS.Products.Business.Configuration;
 using POS.Products.Business.Mappings;
 using POS.Products.Business.Services;
 using POS.Products.Business.Services.IServices;
@@ -8,10 +11,14 @@ using POS.Products.Data.Interfaces;
 using POS.Products.Data.Models;
 using POS.Products.Data.Repositories;
 using System.Text.Json.Serialization;
+using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add user secrets to the configuration
+builder.Configuration.AddUserSecrets<Program>();
 
 // Add services to the container.
 builder.Services.AddCors(options =>
@@ -28,18 +35,50 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers()
-    //.AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve);
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
-//builder.Services.AddDbContext<ProductDbContext>(optionsAction:options => options.UseSqlServer());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Read JWT settings from configuration
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+// Read the Authority from the environment variable or fallback to .NET secrets
+var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
+                    ?? builder.Configuration["IDENTITY_API_URL"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'IDENTITY_API_URL' not found.");
+
+// Read the JWT key from the environment variable or fallback to .NET secrets
+var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
+             ?? builder.Configuration["IdentityJwtKey"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'IdentityJwtKey' not found.");
+
+// Add Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityApiUrl;
+        options.Audience = jwtSettings["Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // DataBase Configuration
 builder.Services.AddScoped<ProductDbContext>();
 
-// Read the environment variable for the database password
+// Read the environment variable for the database password or fallback to .NET secrets
 var productDbPassword = Environment.GetEnvironmentVariable("ProductDBPassword")
-                      ?? throw new InvalidOperationException("Environment variable 'ProductDBPassword' not found.");
+                      ?? builder.Configuration["ProductDBPassword"]
+                      ?? throw new InvalidOperationException("Environment variable or secret 'ProductDBPassword' not found.");
 
 // Get the connection string and replace the placeholder with the actual password
 string connectionString = builder.Configuration.GetConnectionString("ProductDB")
@@ -69,11 +108,16 @@ builder.Services.AddScoped(typeof(ICategoryRepository), typeof(CategoryRepositor
 // Generic Services
 builder.Services.AddScoped(typeof(IReadServiceAsync<,>), typeof(ReadServiceAsync<,>));
 builder.Services.AddScoped(typeof(IGenericServiceAsync<,>), typeof(GenericServiceAsync<,>));
-//////////////////////////////////// Services ////////////////////////////////////
 
 // Asset Mappings
 builder.Services.AddScoped(typeof(IProductService), typeof(ProductService));
 builder.Services.AddScoped(typeof(ICategoryService), typeof(CategoryService));
+
+// Add MemoryCache service
+builder.Services.AddMemoryCache();
+
+// Register CacheSettings configuration
+builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 
 var app = builder.Build();
 
@@ -91,14 +135,10 @@ else
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseCors(MyAllowSpecificOrigins);
-
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

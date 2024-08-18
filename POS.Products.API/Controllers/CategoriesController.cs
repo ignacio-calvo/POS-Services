@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -7,7 +8,7 @@ using POS.Products.Data.Models;
 namespace POS.Products.API.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
+    [ApiController]    
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService _service;
@@ -65,6 +66,7 @@ namespace POS.Products.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<IActionResult> PutCategory(int id, CategoryDto category)
         {
             if (id != category.Id)
@@ -98,6 +100,7 @@ namespace POS.Products.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<ActionResult<Category>> PostCategory(CategoryDto category)
         {
             if (category.CreatedDate == null) category.CreatedDate = DateTime.Now;
@@ -109,6 +112,7 @@ namespace POS.Products.API.Controllers
 
         // DELETE: api/Categories/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteCategory(int id)
         {
             var category = await _service.GetByIdAsync(id);
