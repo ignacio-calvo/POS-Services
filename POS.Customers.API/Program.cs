@@ -40,9 +40,9 @@ builder.Services.AddSwaggerGen();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
 // Read the Authority from the environment variable or fallback to .NET secrets
-var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
-                    ?? builder.Configuration["IDENTITY_API_URL"]
-                    ?? throw new InvalidOperationException("Environment variable or secret 'IDENTITY_API_URL' not found.");
+var identityApiUrl = Environment.GetEnvironmentVariable("IdentityApiUrl")
+                    ?? builder.Configuration["IdentityApiUrl"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'IdentityApiUrl' not found.");
 
 // Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
