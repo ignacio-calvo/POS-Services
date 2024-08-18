@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POS.Customers.Business.CustomExceptions;
 using POS.Customers.Business.DTOs;
@@ -9,6 +10,7 @@ namespace POS.Customers.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Apply authorization to the entire controller
     public class CustomersController : Controller
     {
         private readonly ICustomerService _service;
@@ -37,7 +39,7 @@ namespace POS.Customers.API.Controllers
             {
                 return BadRequest("Id must be greater than 0");
             }
-            
+
             var customer = await _service.GetByIdAsync(id);
 
             if (customer == null)
@@ -45,7 +47,7 @@ namespace POS.Customers.API.Controllers
                 return NotFound();
             }
 
-            return Ok(customer); 
+            return Ok(customer);
         }
 
         // PUT: api/Customers/5
@@ -121,7 +123,7 @@ namespace POS.Customers.API.Controllers
             }
 
             await _service.DeleteAsync(id);
-            
+
             return NoContent();
         }
 

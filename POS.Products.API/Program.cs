@@ -1,5 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.IdentityModel.Tokens;
 using POS.Products.Business.Configuration;
 using POS.Products.Business.Mappings;
 using POS.Products.Business.Services;
@@ -10,6 +11,7 @@ using POS.Products.Data.Interfaces;
 using POS.Products.Data.Models;
 using POS.Products.Data.Repositories;
 using System.Text.Json.Serialization;
+using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
@@ -33,6 +35,37 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Read JWT settings from configuration
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+// Read the Authority from the environment variable
+var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
+                    ?? throw new InvalidOperationException("Environment variable 'IDENTITY_API_URL' not found.");
+
+// Read the JWT key from the environment variable
+var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
+             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+
+// Add Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityApiUrl;
+        options.Audience = jwtSettings["Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // DataBase Configuration
 builder.Services.AddScoped<ProductDbContext>();
@@ -97,7 +130,8 @@ else
 
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseCors(MyAllowSpecificOrigins);
+app.UseCors(MyAllowSpecificOrigins); 
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

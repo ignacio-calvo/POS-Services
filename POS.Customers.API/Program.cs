@@ -1,12 +1,15 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using POS.Customers.Business.Mappings;
-using POS.Customers.Business.Services.IServices;
 using POS.Customers.Business.Services;
-using POS.Customers.Data;
-using POS.Customers.Data.Repositories;
-using POS.Customers.Business.Services.ServiceMappings;
+using POS.Customers.Business.Services.IServices;
 using POS.Customers.Business.Services.IServices.IServiceMappings;
+using POS.Customers.Business.Services.ServiceMappings;
+using POS.Customers.Data;
 using POS.Customers.Data.Interfaces;
+using POS.Customers.Data.Repositories;
+using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
@@ -30,9 +33,39 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Read JWT settings from configuration
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+// Read the Authority from the environment variable
+var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
+                    ?? throw new InvalidOperationException("Environment variable 'IDENTITY_API_URL' not found.");
+
+// Read the JWT key from the environment variable
+var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
+             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+
+// Add Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityApiUrl;
+        options.Audience = jwtSettings["Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // Database Configuration
 builder.Services.AddScoped<CustomerDbContext>();
-
 
 // Read the environment variable for the database password
 var customerDbPassword = Environment.GetEnvironmentVariable("CustomerDBPassword")
@@ -88,6 +121,7 @@ app.UseRouting();
 
 app.UseCors(MyAllowSpecificOrigins);
 
+app.UseAuthentication(); // Ensure this is added before UseAuthorization
 app.UseAuthorization();
 
 app.MapControllers();

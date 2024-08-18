@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using POS.Orders.Business.Mappings;
 using POS.Orders.Business.Services;
 using POS.Orders.Business.Services.IServices;
@@ -7,6 +9,7 @@ using POS.Orders.Business.Services.ServiceMappings;
 using POS.Orders.Data;
 using POS.Orders.Data.Interfaces;
 using POS.Orders.Data.Repositories;
+using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
 
@@ -29,6 +32,37 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Read JWT settings from configuration
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+
+// Read the Authority from the environment variable
+var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
+                    ?? throw new InvalidOperationException("Environment variable 'IDENTITY_API_URL' not found.");
+
+// Read the JWT key from the environment variable
+var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
+             ?? throw new InvalidOperationException("Environment variable 'IdentityJwtKey' not found.");
+
+// Add Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityApiUrl;
+        options.Audience = jwtSettings["Audience"];
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+builder.Services.AddAuthorization();
 
 // Data Base Configuration
 builder.Services.AddScoped<OrderDbContext>();
@@ -85,14 +119,10 @@ else
 }
 
 app.UseHttpsRedirection();
-//app.UseStaticFiles();
-
 app.UseRouting();
-
-app.UseCors(MyAllowSpecificOrigins); 
-
+app.UseCors(MyAllowSpecificOrigins);
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())

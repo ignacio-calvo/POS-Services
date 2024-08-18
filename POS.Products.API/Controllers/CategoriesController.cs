@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -8,6 +9,7 @@ namespace POS.Products.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Apply authorization to the entire controller
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryService _service;
