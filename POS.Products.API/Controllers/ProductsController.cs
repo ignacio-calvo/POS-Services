@@ -10,7 +10,6 @@ namespace POS.Products.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize] // Apply authorization to the entire controller
     public class ProductsController : ControllerBase
     {
         private readonly IProductService _service;
@@ -56,6 +55,7 @@ namespace POS.Products.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<IActionResult> PutProduct(int id, ProductDto product)
         {
             if (id != product.Id)
@@ -90,6 +90,7 @@ namespace POS.Products.API.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<ActionResult<ProductDto>> PostProduct(ProductDto product)
         {
             if (product.CreatedDate == null) product.CreatedDate = DateTime.Now;
@@ -109,6 +110,7 @@ namespace POS.Products.API.Controllers
 
         // DELETE: api/Products/5
         [HttpDelete("{id}")]
+        [Authorize]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var product = await _service.GetByIdAsync(id);
