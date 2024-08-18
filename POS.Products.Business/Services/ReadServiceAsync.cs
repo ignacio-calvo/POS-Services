@@ -4,6 +4,8 @@ using POS.Products.Business.CustomExceptions;
 using POS.Products.Data.Models;
 using POS.Products.Data.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using POS.Products.Business.Configuration;
 
 
 namespace POS.Products.Business.Services
@@ -15,13 +17,14 @@ namespace POS.Products.Business.Services
         private readonly IGenericRepository<TEntity> _repository;
         private readonly IMapper _mapper;
         private readonly IMemoryCache _cache;
-        private readonly TimeSpan _cacheDuration = TimeSpan.FromDays(1);
+        private readonly TimeSpan _cacheDuration;
 
-        public ReadServiceAsync(IGenericRepository<TEntity> repo, IMapper mapper, IMemoryCache cache) : base()
+        public ReadServiceAsync(IGenericRepository<TEntity> repo, IMapper mapper, IMemoryCache cache, IOptions<CacheSettings> cacheSettings) : base()
         {
             _repository = repo;
             _mapper = mapper;
             _cache = cache;
+            _cacheDuration = TimeSpan.FromHours(cacheSettings.Value.CacheDurationInHours);
         }
 
         public async Task<IEnumerable<TDto>> GetAllAsync()

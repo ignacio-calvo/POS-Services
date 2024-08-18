@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using POS.Products.Business.Configuration;
 using POS.Products.Business.Mappings;
 using POS.Products.Business.Services;
 using POS.Products.Business.Services.IServices;
@@ -75,6 +76,9 @@ builder.Services.AddScoped(typeof(ICategoryService), typeof(CategoryService));
 
 // Add MemoryCache service
 builder.Services.AddMemoryCache();
+
+// Register CacheSettings configuration
+builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 
 var app = builder.Build();
 

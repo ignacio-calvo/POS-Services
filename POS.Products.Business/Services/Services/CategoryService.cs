@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using POS.Products.Business.Configuration;
 using POS.Products.Business.CustomExceptions;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -14,14 +16,15 @@ namespace POS.Products.Business.Services.ServiceMappings
         private readonly IMapper _mapper;
         private readonly ICategoryRepository _repository;
         private readonly IMemoryCache _cache;
-        private readonly TimeSpan _cacheDuration = TimeSpan.FromDays(1);
+        private readonly TimeSpan _cacheDuration;
 
-        public CategoryService(ICategoryRepository repository, IMapper mapper, IMemoryCache cache)
-            : base(repository, mapper, cache)
+        public CategoryService(ICategoryRepository repository, IMapper mapper, IMemoryCache cache, IOptions<CacheSettings> cacheSettings)
+            : base(repository, mapper, cache, cacheSettings)
         {
             _repository = repository;
             _mapper = mapper;
             _cache = cache;
+            _cacheDuration = TimeSpan.FromHours(cacheSettings.Value.CacheDurationInHours);
         }
 
         public async Task<bool> ExistsAsync(int id)
@@ -47,7 +50,7 @@ namespace POS.Products.Business.Services.ServiceMappings
         public async Task<IEnumerable<CategoryDto>> GetAllWithProductsAsync()
         {
             const string cacheKey = "all_categories_with_products";
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto> cachedCategories))
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto>? cachedCategories))
             {
                 try
                 {
@@ -76,13 +79,13 @@ namespace POS.Products.Business.Services.ServiceMappings
                 }
             }
 
-            return cachedCategories;
+            return cachedCategories ?? Enumerable.Empty<CategoryDto>();
         }
 
         public async Task<IEnumerable<CategoryDto>> GetAllWithProductsSizesAsync()
         {
             const string cacheKey = "all_categories_with_products_sizes";
-            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto> cachedCategories))
+            if (!_cache.TryGetValue(cacheKey, out IEnumerable<CategoryDto>? cachedCategories))
             {
                 try
                 {
@@ -111,7 +114,7 @@ namespace POS.Products.Business.Services.ServiceMappings
                 }
             }
 
-            return cachedCategories;
+            return cachedCategories ?? Enumerable.Empty<CategoryDto>();
         }
     }
 } 

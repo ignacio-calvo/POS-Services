@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+using POS.Products.Business.Configuration;
 using POS.Products.Business.CustomExceptions;
 using POS.Products.Business.DTOs;
 using POS.Products.Business.Services.IServices.IServiceMappings;
@@ -13,8 +15,8 @@ namespace POS.Products.Business.Services.ServiceMappings
         private readonly IProductRepository _repository;
         private readonly IMemoryCache _cache;
 
-        public ProductService(IProductRepository repository, IMapper mapper, IMemoryCache cache)
-            : base(repository, mapper, cache)
+        public ProductService(IProductRepository repository, IMapper mapper, IMemoryCache cache, IOptions<CacheSettings> cacheSettings)
+            : base(repository, mapper, cache, cacheSettings)
         {
             _repository = repository;
             _mapper = mapper;
