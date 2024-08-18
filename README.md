@@ -13,7 +13,7 @@ Solution has been dockerized and orchestrated using Docker Compose.
 ## Getting Started
 
 You need to have Docker installed in your system. 
-You will need to create a ".env" file in the root path containing the variables and values needed by the docker-compose.yaml (all the ones formatted like ${Variable})
+You will need to create a ".env" file in the root path containing the variables and values needed by the docker-compose.yaml (The ones following the "${Variable}" format).
 
 Content of your .env file may look something like: 
 
@@ -24,3 +24,5 @@ Content of your .env file may look something like:
     OrderDBPassword=Y0urPassW0rd
     CustomerDBPassword=Y0urPassW0rd
     ProductDBPassword=Y0urPassW0rd
+
+You will also need to make sure you have a self-signed certificate for enabling consuming APIs through secure SSL protocol (https). For more insights on generating self-signed dev certs: <https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-dev-certs>
