@@ -45,10 +45,10 @@ namespace POS.Customers.Data
             Customer cust01 = new Customer
             {
                 Id = 1,
-                FirstName = "Ignacio",
-                LastName = "Calvo",
-                PhoneNumber = "3513335304",
-                Email = "ignaciocalvo@live.com.ar"
+                FirstName = "John",
+                LastName = "Doe",
+                Email = "john.doe@example.com",
+                PhoneNumber = "3510000000"
             };
 
 
