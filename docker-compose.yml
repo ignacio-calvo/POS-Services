@@ -45,6 +45,30 @@ services:
     ports:
       - "5005:8080"  # Map host port 5005 to container HTTP port 8080
       - "7030:8081"  # Map host port 7030 to container HTTPs port 8081
+  pos.customerregistration.api:
+    image: ${DOCKER_REGISTRY-}poscustomerregistrationapi
+    build:
+      context: .
+      dockerfile: POS.CustomerRegistration.API/Dockerfile 
+    depends_on:
+      - pos.customers.api
+      - pos.identity.api
+    networks:
+      - posnetwork
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${ASPNETCOREKestrelCertificatesDefaultPassword}
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
+      - IdentityApiUrl=${IdentityApiUrl} # URL of the Identity API      
+      - IdentityJwtKey=${IdentityJwtKey} # Need to pass by an environment variable for the JWT Key or set one up in an .env file.
+      - CustomersApiUrl=${CustomersApiUrl} # URL of the Identity API
+    volumes:
+      - ~/.aspnet/https:/https:ro
+    env_file:
+      - .env
+    ports:
+      - "5004:8080"  # Map host port 5004 to container HTTP port 8080
+      - "7031:8081"  # Map host port 7031 to container HTTPs port 8081
   pos.orders.api:
     image: ${DOCKER_REGISTRY-}posordersapi
     build:

@@ -24,11 +24,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:5100",
-                                              "http://127.0.0.1:5100",
-                                              "https://localhost:5100")
+                          policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .AllowCredentials();
                       });
 });
 
@@ -43,6 +42,13 @@ var jwtSettings = builder.Configuration.GetSection("Jwt");
 var identityApiUrl = Environment.GetEnvironmentVariable("IdentityApiUrl")
                     ?? builder.Configuration["IdentityApiUrl"]
                     ?? throw new InvalidOperationException("Environment variable or secret 'IdentityApiUrl' not found.");
+
+
+// Read the Authority from the environment variable or fallback to .NET secrets
+var customersApiUrl = Environment.GetEnvironmentVariable("CustomersApiUrl")
+                    ?? builder.Configuration["CustomersApiUrl"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'CustomersApiUrl' not found.");
+
 
 // Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
