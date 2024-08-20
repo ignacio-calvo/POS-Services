@@ -2,17 +2,19 @@
 using System.ComponentModel.DataAnnotations;
 using POS.CommonBase;
 
-namespace POS.Customers.Business.DTOs
+namespace POS.CustomerRegistration.API.DTOs
 {
-    public class CustomerDto:EntityBase
+    public class CustomerUserDto:EntityBase
     {
         [Key]
         public int Id { get; set; }
 
-        public string? PhoneNumber { get; set; }
-        public string? PhoneExtension { get; set; }
+        public required string Email { get; set; }
         public required string LastName { get; set; }
         public required string FirstName { get; set; }
+        public required string Password { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? PhoneExtension { get; set; }
         public string? CompanyName { get; set; }
         public string? AddressLine1 { get; set; }
         public string? StreetNumber { get; set; }
@@ -20,7 +22,6 @@ namespace POS.Customers.Business.DTOs
         public string? State{ get; set; }
         public string? City { get; set; }
         public string? PostalCode { get; set; }
-        public required string Email { get; set; }
 
     }
 }

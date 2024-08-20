@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using POS.Identity.API.Models;
+using POS.CustomerRegistration.API.Mappings;
+using POS.CustomerRegistration.API.IServices;
+using POS.CustomerRegistration.API.Services;
 using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
@@ -27,30 +28,15 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
-// Read the value for the database password. First try reading from within Environment Variable, if that fails fall back to read from .NET Secret Manager
-var identityDbPassword = Environment.GetEnvironmentVariable("IdentityDBPassword")
-                      ?? builder.Configuration["IdentityDBPassword"]
-                      ?? throw new InvalidOperationException("Environment variable or secret 'IdentityDBPassword' not found.");
+var identityApiUrl = Environment.GetEnvironmentVariable("IdentityApiUrl")
+             ?? builder.Configuration["IdentityApiUrl"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'IdentityApiUrl' not found.");
 
-// Get the connection string and replace the placeholder with the actual password
-string connectionString = builder.Configuration.GetConnectionString("IdentityDB")
-                         ?.Replace("{IdentityDBPassword}", identityDbPassword)
-                         ?? throw new InvalidOperationException("Connection string 'IdentityDB' not found.");
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-           .AddEntityFrameworkStores<ApplicationDbContext>()
-           .AddDefaultTokenProviders();
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-{
-    options.UseSqlServer(
-        connectionString,
-        sqlServerOptionsAction: sqlOptions =>
-        {
-            sqlOptions.MigrationsAssembly("POS.Identity.API");
-        });
-});
+var customersApiUrl = Environment.GetEnvironmentVariable("CustomersApiUrl")
+             ?? builder.Configuration["CustomersApiUrl"]
+             ?? throw new InvalidOperationException("Environment variable or secret 'CustomersApiUrl' not found.");
 
 // Read the secret for the JWT key
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
@@ -96,12 +82,31 @@ builder.Services.AddAuthentication(options =>
            }
        });
 
+// Register HttpClient services for CustomerService and IdentityService
+builder.Services.AddHttpClient<ICustomerService, CustomerService>(client =>
+{
+    client.BaseAddress = new Uri(customersApiUrl);
+});
+
+builder.Services.AddHttpClient<IIdentityService, IdentityService>(client =>
+{
+    client.BaseAddress = new Uri(identityApiUrl);
+});
+
+// Register CustomerRegistrationService
+builder.Services.AddScoped<ICustomerRegistrationService, CustomerRegistrationService>();
+
+// AutoMapper Configuration
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 else
 {
@@ -114,18 +119,18 @@ app.UseRouting();
 
 app.UseCors(MyAllowSpecificOrigins);
 
-app.UseAuthentication(); // Ensure this is added before UseAuthorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    var context = services.GetRequiredService<ApplicationDbContext>();
-    var logger = services.GetRequiredService<ILogger<Program>>();
+//using (var scope = app.Services.CreateScope())
+//{
+//    var services = scope.ServiceProvider;
+//    var context = services.GetRequiredService<ApplicationDbContext>();
+//    var logger = services.GetRequiredService<ILogger<Program>>();
 
-    context.Database.Migrate();
-}
+//    context.Database.Migrate();
+//}
 
 app.Run();

@@ -14,7 +14,7 @@ namespace POS.Customers.Data.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public required string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         public string? PhoneExtension { get; set; }
         public required string LastName { get; set; }
         public required string FirstName { get; set; }

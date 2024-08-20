@@ -26,11 +26,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy =>
                       {
-                          policy.WithOrigins("http://localhost:5100",
-                                              "http://127.0.0.1:5100",
-                                              "https://localhost:5100")
+                          policy.SetIsOriginAllowed(origin => new Uri(origin).Host == "localhost")
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
+                                .AllowCredentials();
                       });
 });
 
@@ -43,9 +42,9 @@ builder.Services.AddSwaggerGen();
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
 // Read the Authority from the environment variable or fallback to .NET secrets
-var identityApiUrl = Environment.GetEnvironmentVariable("IDENTITY_API_URL")
-                    ?? builder.Configuration["IDENTITY_API_URL"]
-                    ?? throw new InvalidOperationException("Environment variable or secret 'IDENTITY_API_URL' not found.");
+var identityApiUrl = Environment.GetEnvironmentVariable("IdentityApiUrl")
+                    ?? builder.Configuration["IdentityApiUrl"]
+                    ?? throw new InvalidOperationException("Environment variable or secret 'IdentityApiUrl' not found.");
 
 // Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
@@ -68,6 +67,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.RequireHttpsMetadata = false;
+        }
     });
 
 builder.Services.AddAuthorization();
@@ -132,9 +136,9 @@ else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection(); // Only force HTTPs in production
 }
 
-app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthentication();
