@@ -27,8 +27,22 @@ namespace POS.CustomerRegistration.API.Services
                 throw new Exception("Failed to register user identity");
             }
 
-            // Step 2: Create customer record
-            var customerResult = await _customerService.CreateCustomerAsync(_mapper.Map<CustomerDto>(customerUserDto));
+            // Step 2: Login to get JWT token
+            var loginResult = await _identityService.LoginAsync(new LoginModel
+            {
+                Email = customerUserDto.Email, 
+                Password = customerUserDto.Password
+            });
+
+            if (!loginResult.IsSuccess)
+            {
+                // Rollback identity creation if login fails
+                await _identityService.DeleteIdentityAsync(identityResult.UserId);
+                throw new Exception("Failed to login user");
+            }
+
+            // Step 3: Create customer record with JWT token
+            var customerResult = await _customerService.CreateCustomerAsync(_mapper.Map<CustomerDto>(customerUserDto), loginResult.Token);
             if (!customerResult.IsSuccess)
             {
                 // Rollback identity creation if customer creation fails
