@@ -44,12 +44,6 @@ var identityApiUrl = Environment.GetEnvironmentVariable("IdentityApiUrl")
                     ?? throw new InvalidOperationException("Environment variable or secret 'IdentityApiUrl' not found.");
 
 
-// Read the Authority from the environment variable or fallback to .NET secrets
-var customersApiUrl = Environment.GetEnvironmentVariable("CustomersApiUrl")
-                    ?? builder.Configuration["CustomersApiUrl"]
-                    ?? throw new InvalidOperationException("Environment variable or secret 'CustomersApiUrl' not found.");
-
-
 // Read the JWT key from the environment variable or fallback to .NET secrets
 var jwtKey = Environment.GetEnvironmentVariable("IdentityJwtKey")
              ?? builder.Configuration["IdentityJwtKey"]
@@ -71,6 +65,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
+        if (builder.Environment.IsDevelopment())
+        {
+            options.RequireHttpsMetadata = false;
+        }
     });
 
 builder.Services.AddAuthorization();
@@ -124,10 +123,8 @@ else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection(); // Only force HTTPs in production
 }
-
-app.UseHttpsRedirection();
-//app.UseStaticFiles();
 
 app.UseRouting();
 

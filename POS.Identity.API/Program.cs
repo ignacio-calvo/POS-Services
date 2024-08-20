@@ -87,8 +87,13 @@ builder.Services.AddAuthentication(options =>
                ValidateIssuerSigningKey = true,
                ValidIssuer = builder.Configuration["Jwt:Issuer"],
                ValidAudience = builder.Configuration["Jwt:Audience"],
-               IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+               IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key is not configured.")))
            };
+
+           if (builder.Environment.IsDevelopment())
+           {
+               options.RequireHttpsMetadata = false;
+           }
        });
 
 var app = builder.Build();
@@ -102,10 +107,8 @@ else
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection(); // Only force HTTPs in production
 }
-
-app.UseHttpsRedirection();
-//app.UseStaticFiles();
 
 app.UseRouting();
 
