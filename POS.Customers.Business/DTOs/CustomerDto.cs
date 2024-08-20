@@ -9,7 +9,7 @@ namespace POS.Customers.Business.DTOs
         [Key]
         public int Id { get; set; }
 
-        public string PhoneNumber { get; set; }
+        public string? PhoneNumber { get; set; }
         public string? PhoneExtension { get; set; }
         public required string LastName { get; set; }
         public required string FirstName { get; set; }
