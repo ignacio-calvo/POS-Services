@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using POS.Products.Data.Models;
 
@@ -11,9 +12,11 @@ using POS.Products.Data.Models;
 namespace POS.Products.Data.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    partial class ProductContextModelSnapshot : ModelSnapshot
+    [Migration("20240822153503_ProductTypeEnum")]
+    partial class ProductTypeEnum
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

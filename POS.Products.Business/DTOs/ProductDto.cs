@@ -27,7 +27,7 @@ namespace POS.Products.Business.DTOs
         public bool? IsSpecialtyPizza { get; set; }
         public short StatusCode { get; set; }
         public bool ShouldPromptForSize { get; set; }
-        public short ProductTypeCode { get; set; }
+        public ProductTypeDto ProductType { get; set; } = ProductTypeDto.Generic; // Default to Generic
         public string? ProductImageUrl { get; set; }
         
     }
