@@ -4,11 +4,12 @@ using POS.CommonBase;
 
 namespace POS.Products.Data.Models
 {   
-    public partial class Product : EntityBase
+public partial class Product : EntityBase
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         [Required]
         public string? Name { get; set; }
 
@@ -27,9 +28,8 @@ namespace POS.Products.Data.Models
         public bool? IsSpecialtyPizza { get; set; }
         public short StatusCode { get; set; }
         public bool ShouldPromptForSize { get; set; }
-        public short ProductTypeCode { get; set; }
         public string? ProductImageUrl { get; set; }
-        
+        public ProductType ProductType { get; set; } = ProductType.Generic; // Default to Generic
     }
 
 }
