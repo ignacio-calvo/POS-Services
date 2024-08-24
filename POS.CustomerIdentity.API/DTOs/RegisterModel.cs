@@ -1,4 +1,4 @@
-﻿namespace POS.CustomerRegistration.API.DTOs
+﻿namespace POS.CustomerIdentity.API.DTOs
 {
     public class RegisterModel
     {

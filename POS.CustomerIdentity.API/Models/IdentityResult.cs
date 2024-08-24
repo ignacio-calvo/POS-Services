@@ -1,4 +1,4 @@
-﻿namespace POS.CustomerRegistration.API.Models
+﻿namespace POS.CustomerIdentity.API.Models
 {
     public class IdentityResult
     {

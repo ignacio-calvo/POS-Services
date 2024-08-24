@@ -1,7 +1,7 @@
-﻿using POS.CustomerRegistration.API.DTOs;
-using POS.CustomerRegistration.API.Models;
+﻿using POS.CustomerIdentity.API.DTOs;
+using POS.CustomerIdentity.API.Models;
 
-namespace POS.CustomerRegistration.API.IServices
+namespace POS.CustomerIdentity.API.IServices
 {
     public interface ICustomerService
     {

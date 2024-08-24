@@ -1,6 +1,6 @@
-﻿using POS.CustomerRegistration.API.DTOs;
+﻿using POS.CustomerIdentity.API.DTOs;
 
-namespace POS.CustomerRegistration.API.Models
+namespace POS.CustomerIdentity.API.Models
 {
     public class CustomerResult
     {
