@@ -22,10 +22,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityR
     {
         // Seed roles
         modelBuilder.Entity<IdentityRole>().HasData(
-            new IdentityRole { Id = "1", Name = "SuperAdmin", NormalizedName = "SUPERADMIN" },
-            new IdentityRole { Id = "2", Name = "Admin", NormalizedName = "ADMIN" },
-            new IdentityRole { Id = "3", Name = "Customer", NormalizedName = "CUSTOMER" },
-            new IdentityRole { Id = "4", Name = "Employee", NormalizedName = "EMPLOYEE" }
+            new IdentityRole { Id = "1", Name = AppRoles.SuperAdmin, NormalizedName = "SUPERADMIN" },
+            new IdentityRole { Id = "2", Name = AppRoles.Admin, NormalizedName = "ADMIN" },
+            new IdentityRole { Id = "3", Name = AppRoles.Customer, NormalizedName = "CUSTOMER" },
+            new IdentityRole { Id = "4", Name = AppRoles.Employee, NormalizedName = "EMPLOYEE" }
             
         );
 
