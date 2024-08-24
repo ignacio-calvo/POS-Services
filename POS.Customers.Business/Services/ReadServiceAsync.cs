@@ -7,8 +7,8 @@ using POS.Customers.Business.CustomExceptions;
 namespace POS.Customers.Business.Services
 {
     public class ReadServiceAsync<TEntity, TDto> : IReadServiceAsync<TEntity, TDto>
-        where TEntity : class
-        where TDto : class
+            where TEntity : class
+            where TDto : class
     {
         private readonly ICustomerRepository _repository;
         private readonly IMapper _mapper;
@@ -18,6 +18,7 @@ namespace POS.Customers.Business.Services
             _repository = repo;
             _mapper = mapper;
         }
+
         public async Task<IEnumerable<TDto>> GetAllAsync()
         {
             try
@@ -32,12 +33,10 @@ namespace POS.Customers.Business.Services
                 {
                     throw new EntityNotFoundException($"No {typeof(TDto).Name}s were found");
                 }
-
             }
             catch (EntityNotFoundException ex)
             {
                 var message = $"Error retrieving all {typeof(TDto).Name}s";
-
                 throw new EntityNotFoundException(message, ex);
             }
         }
@@ -55,14 +54,13 @@ namespace POS.Customers.Business.Services
 
                 return _mapper.Map<TDto>(result);
             }
-
             catch (EntityNotFoundException ex)
             {
                 var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
-
                 throw new EntityNotFoundException(message, ex);
             }
         }
+
         public async Task<bool> Exists(int id)
         {
             try
@@ -76,11 +74,30 @@ namespace POS.Customers.Business.Services
 
                 return result;
             }
-
             catch (EntityNotFoundException ex)
             {
                 var message = $"Error retrieving {typeof(TDto).Name} with Id: {id}";
+                throw new EntityNotFoundException(message, ex);
+            }
+        }
 
+        public async Task<TDto> GetByEmailAsync(string email)
+        {
+            try
+            {
+                var result = await _repository.GetByEmail(email);
+
+                if (result is null)
+                {
+                    // throw new EntityNotFoundException($"Entity with email {email} not found.");
+                    return null;
+                }
+
+                return _mapper.Map<TDto>(result);
+            }
+            catch (EntityNotFoundException ex)
+            {
+                var message = $"Error retrieving {typeof(TDto).Name} with email: {email}";
                 throw new EntityNotFoundException(message, ex);
             }
         }

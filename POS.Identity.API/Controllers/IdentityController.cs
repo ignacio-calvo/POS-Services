@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Google.Apis.Auth;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using POS.Identity.API.DTOs;
 using POS.Identity.API.Models;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net.Http;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 
 namespace POS.Identity.API.Controllers
 {
-
     [Route("api/[controller]")]
     [ApiController]
     public class IdentityController : Controller
@@ -29,7 +31,15 @@ namespace POS.Identity.API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
             var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FirstName = model.FirstName, LastName = model.LastName };
-            var result = await _userManager.CreateAsync(user, model.Password);
+            IdentityResult result;
+            if (model.Password == null)
+            {
+                result = await _userManager.CreateAsync(user); // for SSO like Google login where password is not required
+            }
+            else
+            {
+                result = await _userManager.CreateAsync(user, model.Password); // for normal registration with username and password
+            }            
 
             if (result.Succeeded)
             {
@@ -54,6 +64,40 @@ namespace POS.Identity.API.Controllers
             return Unauthorized();
         }
 
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginModel model)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(model.Token))
+                {
+                    return BadRequest(new { Message = "Token is required" });
+                }
+
+                // Log the received token for debugging purposes
+                Console.WriteLine($"Received Google token: {model.Token}");
+
+                // Fetch user info from Google using the access token
+                var userInfoResponse = await new HttpClient().GetStringAsync($"https://www.googleapis.com/oauth2/v1/userinfo?access_token={model.Token}");
+                var userInfo = JsonSerializer.Deserialize<GoogleUserInfo>(userInfoResponse);
+
+                var user = await _userManager.FindByEmailAsync(userInfo.Email);
+
+                if (user == null)
+                {                    
+                    return NotFound(new { Message = "User not found. Register first." });
+                }
+
+                var token = GenerateJwtToken(user);
+                return Ok(new { Token = token });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return Unauthorized(new { Message = "An error occurred", Details = ex.Message });
+            }
+        }
+
         [HttpDelete("{username}")]
         public async Task<IActionResult> Delete(string username)
         {
@@ -72,8 +116,25 @@ namespace POS.Identity.API.Controllers
             return BadRequest(result.Errors);
         }
 
+        [HttpGet("user-exists/{email}")]
+        public async Task<IActionResult> UserExists(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user != null)
+            {
+                return Ok(new { Exists = true });
+            }
+
+            return Ok(new { Exists = false });
+        }
+
         private string GenerateJwtToken(ApplicationUser user)
         {
+            if (user == null || string.IsNullOrEmpty(user.Email))
+            {
+                throw new ArgumentNullException(nameof(user), "User or User Email cannot be null");
+            }
+
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Email),
@@ -81,8 +142,14 @@ namespace POS.Identity.API.Controllers
                 new Claim(ClaimTypes.NameIdentifier, user.Id)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var key = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(key))
+            {
+                throw new ArgumentNullException(nameof(key), "JWT Key cannot be null");
+            }
+
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
+            var creds = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -94,4 +161,5 @@ namespace POS.Identity.API.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
+
 }

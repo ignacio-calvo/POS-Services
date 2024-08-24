@@ -93,6 +93,9 @@ builder.Services.AddHttpClient<IIdentityService, IdentityService>(client =>
     client.BaseAddress = new Uri(identityApiUrl);
 });
 
+// Register GoogleService
+builder.Services.AddScoped<IGoogleService, GoogleService>();
+
 // Register CustomerRegistrationService
 builder.Services.AddScoped<ICustomerRegistrationService, CustomerRegistrationService>();
 

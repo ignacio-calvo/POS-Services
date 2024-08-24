@@ -50,6 +50,28 @@ namespace POS.Customers.API.Controllers
             return Ok(customer);
         }
 
+        // GET: api/Customers/email/{email}
+        [HttpGet("email/{email}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<ActionResult<CustomerDto>> GetCustomerByEmail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return BadRequest("Email must be provided");
+            }
+
+            var customer = await _service.GetByEmailAsync(email);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(customer);
+        }
+
         // PUT: api/Customers/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]

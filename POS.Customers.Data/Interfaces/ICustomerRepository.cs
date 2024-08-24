@@ -12,6 +12,7 @@ namespace POS.Customers.Data.Interfaces
         Task<Customer> Update(Customer customer);
         Task DeleteById(int id);
         Task SaveChangesAsync();
+        Task<Customer> GetByEmail(string email);
 
     }
 }

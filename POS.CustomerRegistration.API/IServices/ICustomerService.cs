@@ -5,6 +5,7 @@ namespace POS.CustomerRegistration.API.IServices
 {
     public interface ICustomerService
     {
-        Task<CustomerResult> CreateCustomerAsync(CustomerDto customerDto, string token); // Add token parameter
+        Task<CustomerResult> CreateCustomerAsync(CustomerDto customerDto, string token);
+        Task<CustomerDto> GetCustomerByEmailAsync(string email, string token); 
     }
 }

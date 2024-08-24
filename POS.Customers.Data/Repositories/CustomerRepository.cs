@@ -4,7 +4,7 @@ using POS.Customers.Data.Models;
 
 namespace POS.Customers.Data.Repositories
 {
-    //Generic repository handling typical CRUD methods.
+    // Generic repository handling typical CRUD methods.
     public class CustomerRepository : ICustomerRepository
     {
         private readonly CustomerDbContext _context;
@@ -42,6 +42,7 @@ namespace POS.Customers.Data.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
         public async Task<Customer> Update(Customer customer)
         {
             if (customer != null)
@@ -52,11 +53,13 @@ namespace POS.Customers.Data.Repositories
             }
             return null;
         }
+
         public async Task<Customer> GetByName(string name)
         {
             return await _context.Customers
                 .FirstOrDefaultAsync(e => e.FirstName == name);
         }
+
         public async Task<bool> Exists(int id)
         {
             return await _context.Customers
@@ -66,6 +69,12 @@ namespace POS.Customers.Data.Repositories
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<Customer> GetByEmail(string email)
+        {
+            return await _context.Customers
+                .FirstOrDefaultAsync(e => e.Email == email);
         }
     }
 }
