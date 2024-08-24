@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using POS.Identity.API.Models;
 
-public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -22,34 +22,37 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         // Seed roles
         modelBuilder.Entity<IdentityRole>().HasData(
-            new IdentityRole { Id = "1", Name = "Admin", NormalizedName = "ADMIN" },
-            new IdentityRole { Id = "2", Name = "User", NormalizedName = "USER" }
+            new IdentityRole { Id = "1", Name = "SuperAdmin", NormalizedName = "SUPERADMIN" },
+            new IdentityRole { Id = "2", Name = "Admin", NormalizedName = "ADMIN" },
+            new IdentityRole { Id = "3", Name = "Customer", NormalizedName = "CUSTOMER" },
+            new IdentityRole { Id = "4", Name = "Employee", NormalizedName = "EMPLOYEE" }
+            
         );
 
         // Seed admin user
         var adminUser = new ApplicationUser
         {
             Id = "1", // Primary key
-            UserName = "admin@positive.com",
-            NormalizedUserName = "ADMIN@POSITIVE.COM",
-            Email = "admin@positive.com",
-            NormalizedEmail = "ADMIN@POSITIVE.COM",
+            UserName = "superadmin@positive.com",
+            NormalizedUserName = "SUPERADMIN@POSITIVE.COM",
+            Email = "superadmin@positive.com",
+            NormalizedEmail = "SUPERADMIN@POSITIVE.COM",
             FirstName = "POSitive",
-            LastName = "Admin",
+            LastName = "SuperAdmin",
             EmailConfirmed = true,
             SecurityStamp = Guid.NewGuid().ToString()
         };
 
         var passwordHasher = new PasswordHasher<ApplicationUser>();
-        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "Admin@123");
+        adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "SuperAdmin@123");
 
         modelBuilder.Entity<ApplicationUser>().HasData(adminUser);
 
-        // Assign admin role to admin user
+        // Assign superadmin role to superadmin user
         modelBuilder.Entity<IdentityUserRole<string>>().HasData(
             new IdentityUserRole<string>
             {
-                RoleId = "1", // Admin role ID
+                RoleId = "1", // SuperAdmin role ID
                 UserId = "1"  // Admin user ID
             }
         );
