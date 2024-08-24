@@ -6,7 +6,8 @@ namespace POS.CustomerIdentity.API.IServices
 {
     public interface ICustomerIdentityService
     {
-        Task RegisterCustomerAsync(CustomerUserDto customerUserDto);
+        Task<LoginResult> RegisterCustomerAsync(CustomerUserDto userRegistrationDto);
         Task<LoginResult> GoogleAuthAsync(GoogleLoginModel model);
+        Task<LoginResult> LoginAsync(LoginModel model);
     }
 }

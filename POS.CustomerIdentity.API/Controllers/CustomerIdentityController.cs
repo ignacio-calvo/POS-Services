@@ -13,9 +13,9 @@ namespace POS.CustomerIdentity.API.Controllers
     {
         private readonly ICustomerIdentityService _customerIdentityService;
 
-        public CustomerIdentityController(ICustomerIdentityService userRegistrationService)
+        public CustomerIdentityController(ICustomerIdentityService customerIdentityService)
         {
-            _customerIdentityService = userRegistrationService;
+            _customerIdentityService = customerIdentityService;
         }
 
         [HttpPost("register")]
@@ -23,15 +23,21 @@ namespace POS.CustomerIdentity.API.Controllers
         {
             try
             {
-                await _customerIdentityService.RegisterCustomerAsync(userRegistrationDto);
-                return Ok(new { Message = "User registered successfully" });
+                LoginResult loginResult = await _customerIdentityService.RegisterCustomerAsync(userRegistrationDto);
+                if (loginResult.IsSuccess)
+                {
+                    return Ok(loginResult);
+                }
+                else
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest, loginResult);
+                }
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, new { Message = ex.Message });
             }
         }
-
 
         [HttpPost("google-login")]
         public async Task<IActionResult> GoogleAuth([FromBody] GoogleLoginModel model)
@@ -49,17 +55,44 @@ namespace POS.CustomerIdentity.API.Controllers
                 LoginResult loginResult = await _customerIdentityService.GoogleAuthAsync(model);
                 if (loginResult.IsSuccess)
                 {
-                    return Ok(new { Token = loginResult.Token });
+                    return Ok(loginResult);
                 }
                 else
                 {
-                    return StatusCode(StatusCodes.Status404NotFound, new { Message = loginResult.ErrorMessage });
+                    return StatusCode(StatusCodes.Status404NotFound, loginResult);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
                 return Unauthorized(new { Message = "An error occurred", Details = ex.Message });
+            }
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Password))
+                {
+                    return BadRequest(new { Message = "Email and password are required" });
+                }
+
+                LoginResult loginResult = await _customerIdentityService.LoginAsync(model);
+                if (loginResult.IsSuccess)
+                {
+                    return Ok(loginResult);
+                }
+                else
+                {
+                    return Unauthorized(loginResult);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An error occurred", Details = ex.Message });
             }
         }
     }
