@@ -43,5 +43,29 @@ namespace POS.CustomerRegistration.API.Services
                 return new CustomerResult { IsSuccess = false, ErrorMessage = ex.Message };
             }
         }
+
+        public async Task<CustomerDto> GetCustomerByEmailAsync(string email, string token)
+        {
+            try
+            {
+                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                var response = await _httpClient.GetAsync($"api/customers/email/{email}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<CustomerDto>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.WriteLine($"Exception: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
