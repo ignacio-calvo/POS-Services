@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using POS.CustomerRegistration.API.DTOs;
+using POS.CustomerIdentity.API.DTOs;
 
-namespace POS.CustomerRegistration.API.Mappings
+namespace POS.CustomerIdentity.API.Mappings
 {
     public class MappingProfile : Profile
     {

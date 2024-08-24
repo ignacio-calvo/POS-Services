@@ -1,21 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using POS.CustomerRegistration.API.DTOs;
-using POS.CustomerRegistration.API.IServices;
+using POS.CustomerIdentity.API.DTOs;
+using POS.CustomerIdentity.API.IServices;
 using System.Text.Json;
-using POS.CustomerRegistration.API.Models;
+using POS.CustomerIdentity.API.Models;
 
-namespace POS.CustomerRegistration.API.Controllers
+namespace POS.CustomerIdentity.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CustomerRegistrationController : Controller
+    public class CustomerIdentityController : Controller
     {
-        private readonly ICustomerRegistrationService _userRegistrationService;
+        private readonly ICustomerIdentityService _customerIdentityService;
 
-        public CustomerRegistrationController(ICustomerRegistrationService userRegistrationService)
+        public CustomerIdentityController(ICustomerIdentityService userRegistrationService)
         {
-            _userRegistrationService = userRegistrationService;
+            _customerIdentityService = userRegistrationService;
         }
 
         [HttpPost("register")]
@@ -23,7 +23,7 @@ namespace POS.CustomerRegistration.API.Controllers
         {
             try
             {
-                await _userRegistrationService.RegisterCustomerAsync(userRegistrationDto);
+                await _customerIdentityService.RegisterCustomerAsync(userRegistrationDto);
                 return Ok(new { Message = "User registered successfully" });
             }
             catch (Exception ex)
@@ -46,7 +46,7 @@ namespace POS.CustomerRegistration.API.Controllers
                 // Log the received token for debugging purposes
                 Console.WriteLine($"Received Google token: {model.Token}");
 
-                LoginResult loginResult = await _userRegistrationService.GoogleAuthAsync(model);
+                LoginResult loginResult = await _customerIdentityService.GoogleAuthAsync(model);
                 if (loginResult.IsSuccess)
                 {
                     return Ok(new { Token = loginResult.Token });

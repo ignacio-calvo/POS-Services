@@ -1,6 +1,6 @@
-﻿namespace POS.CustomerRegistration.API.DTOs
+﻿namespace POS.CustomerIdentity.API.DTOs
 {
-    public class CustomerRegistrationDto
+    public class CustomerIdentityDto
     {
         public RegisterModel RegisterModel { get; set; }
         public CustomerDto CustomerDto { get; set; }

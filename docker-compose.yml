@@ -45,11 +45,11 @@ services:
     ports:
       - "5005:8080"  # Map host port 5005 to container HTTP port 8080
       - "7030:8081"  # Map host port 7030 to container HTTPs port 8081
-  pos.customerregistration.api:
-    image: ${DOCKER_REGISTRY-}poscustomerregistrationapi
+  pos.customeridentity.api:
+    image: ${DOCKER_REGISTRY-}poscustomeridentityapi
     build:
       context: .
-      dockerfile: POS.CustomerRegistration.API/Dockerfile 
+      dockerfile: POS.CustomerIdentity.API/Dockerfile 
     depends_on:
       - pos.customers.api
       - pos.identity.api

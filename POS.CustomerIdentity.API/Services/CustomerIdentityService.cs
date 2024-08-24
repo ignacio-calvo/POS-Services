@@ -1,21 +1,21 @@
 ﻿using AutoMapper;
-using POS.CustomerRegistration.API.DTOs;
-using POS.CustomerRegistration.API.Models;
-using POS.CustomerRegistration.API.IServices;
+using POS.CustomerIdentity.API.DTOs;
+using POS.CustomerIdentity.API.Models;
+using POS.CustomerIdentity.API.IServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 
-namespace POS.CustomerRegistration.API.Services
+namespace POS.CustomerIdentity.API.Services
 {
-    public class CustomerRegistrationService : ICustomerRegistrationService
+    public class CustomerIdentityService : ICustomerIdentityService
     {
         private readonly IIdentityService _identityService;
         private readonly ICustomerService _customerService;
         private readonly IGoogleService _googleService;
         private readonly IMapper _mapper;
 
-        public CustomerRegistrationService(IIdentityService identityService, ICustomerService customerService, IGoogleService googleService, IMapper mapper)
+        public CustomerIdentityService(IIdentityService identityService, ICustomerService customerService, IGoogleService googleService, IMapper mapper)
         {
             _identityService = identityService;
             _customerService = customerService;

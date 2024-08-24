@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
-using POS.CustomerRegistration.API.Mappings;
-using POS.CustomerRegistration.API.IServices;
-using POS.CustomerRegistration.API.Services;
+using POS.CustomerIdentity.API.Mappings;
+using POS.CustomerIdentity.API.IServices;
+using POS.CustomerIdentity.API.Services;
 using System.Text;
 
 var MyAllowSpecificOrigins = "_myAllowLocalOrigins";
@@ -96,8 +96,8 @@ builder.Services.AddHttpClient<IIdentityService, IdentityService>(client =>
 // Register GoogleService
 builder.Services.AddScoped<IGoogleService, GoogleService>();
 
-// Register CustomerRegistrationService
-builder.Services.AddScoped<ICustomerRegistrationService, CustomerRegistrationService>();
+// Register CustomerIdentityService
+builder.Services.AddScoped<ICustomerIdentityService, CustomerIdentityService>();
 
 // AutoMapper Configuration
 builder.Services.AddAutoMapper(typeof(MappingProfile));

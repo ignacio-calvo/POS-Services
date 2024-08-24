@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using POS.CommonBase;
 
-namespace POS.CustomerRegistration.API.DTOs
+namespace POS.CustomerIdentity.API.DTOs
 {
     public class CustomerUserDto:EntityBase
     {

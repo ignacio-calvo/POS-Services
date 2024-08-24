@@ -1,10 +1,10 @@
-﻿using POS.CustomerRegistration.API.DTOs;
-using POS.CustomerRegistration.API.IServices;
-using POS.CustomerRegistration.API.Models;
+﻿using POS.CustomerIdentity.API.DTOs;
+using POS.CustomerIdentity.API.IServices;
+using POS.CustomerIdentity.API.Models;
 using System.Text;
 using System.Text.Json;
 
-namespace POS.CustomerRegistration.API.Services
+namespace POS.CustomerIdentity.API.Services
 {
     public class IdentityService : IIdentityService
     {
