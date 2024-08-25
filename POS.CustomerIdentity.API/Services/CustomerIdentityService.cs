@@ -24,41 +24,62 @@ namespace POS.CustomerIdentity.API.Services
 
         public async Task<LoginResult> RegisterCustomerAsync(CustomerUserDto customerUserDto)
         {
-            // Step 1: Register user identity
-            Models.IdentityResult identityResult = await _identityService.RegisterIdentityAsync(_mapper.Map<RegisterModel>(customerUserDto));
+            // Register user identity
+            IdentityResult identityResult = await _identityService.RegisterIdentityAsync(_mapper.Map<RegisterModel>(customerUserDto));
+            if (!identityResult.IsSuccess) // if identity registration failed
+            {
+                // Check for duplicate user error
+                if (identityResult.ErrorMessage == "User with this email already exists.")
+                {
+                    //try to validate credentials to see if the one trying to register is the same Identity as the one that already exists
+                    var loginResult = await _identityService.LoginAsync(new LoginModel
+                    {
+                        Email = customerUserDto.Email,
+                        Password = customerUserDto.Password
+                    });
+
+                    // if login is not successful, maybe somebody else trying to use an email that already exists. return the error
+                    if (!loginResult.IsSuccess)
+                    {
+                        return new LoginResult
+                        {
+                            IsSuccess = false,
+                            ErrorMessage = identityResult.ErrorMessage
+                        };
+                    }
+
+                    // if login is successful, it means the user trying to register is the same as the Identity
+                    identityResult.IsSuccess = loginResult.IsSuccess;
+                    identityResult.Token = loginResult.Token;
+
+                    // check if customer exists for this email
+                    var customerExists = await _customerService.GetCustomerByEmailAsync(customerUserDto.Email, loginResult.Token);
+                    
+                    if (customerExists != null) //if customer exists, given it's the same as the one trying to register, just return a valid login  result
+                    {
+                        return new LoginResult
+                        {
+                            IsSuccess = true,
+                            Token = loginResult.Token,
+                            Customer = customerExists
+                        };
+                    }// if customer does not exist, continue to create a new customer record since it's a valid login                    
+                }
+            }
+
             if (!identityResult.IsSuccess)
             {
                 return new LoginResult
                 {
                     IsSuccess = false,
-                    ErrorMessage = "Failed to register user identity"
+                    ErrorMessage = "Failed to create customer. " + identityResult.ErrorMessage
                 };
             }
 
-            // Step 2: Login to get JWT token
-            var loginResult = await _identityService.LoginAsync(new LoginModel
-            {
-                Email = customerUserDto.Email,
-                Password = customerUserDto.Password
-            });
-
-            if (!loginResult.IsSuccess)
-            {
-                // Rollback identity creation if login fails
-                await _identityService.DeleteIdentityAsync(identityResult.UserId);
-                return new LoginResult
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Failed to login user"
-                };
-            }
-
-            // Step 3: Create customer record with JWT token
-            var customerResult = await _customerService.CreateCustomerAsync(_mapper.Map<CustomerDto>(customerUserDto), loginResult.Token);
+            // Create customer record with JWT token
+            var customerResult = await _customerService.CreateCustomerAsync(_mapper.Map<CustomerDto>(customerUserDto), identityResult.Token);
             if (!customerResult.IsSuccess)
             {
-                // Rollback identity creation if customer creation fails
-                await _identityService.DeleteIdentityAsync(identityResult.UserId);
                 return new LoginResult
                 {
                     IsSuccess = false,
@@ -67,12 +88,12 @@ namespace POS.CustomerIdentity.API.Services
             }
 
             // Retrieve the newly created customer info
-            var customerDto = await _customerService.GetCustomerByEmailAsync(customerUserDto.Email, loginResult.Token);
+            var customerDto = await _customerService.GetCustomerByEmailAsync(customerUserDto.Email, identityResult.Token);
 
             return new LoginResult
             {
                 IsSuccess = true,
-                Token = loginResult.Token,
+                Token = identityResult.Token,
                 Customer = customerDto
             };
         }

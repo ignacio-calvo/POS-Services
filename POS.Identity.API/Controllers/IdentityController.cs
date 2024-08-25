@@ -28,7 +28,7 @@ namespace POS.Identity.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] UserIdentity model)
         {
             var user = new ApplicationUser { UserName = model.Email, Email = model.Email, FirstName = model.FirstName, LastName = model.LastName };
             IdentityResult result;
@@ -39,13 +39,34 @@ namespace POS.Identity.API.Controllers
             else
             {
                 result = await _userManager.CreateAsync(user, model.Password); // for normal registration with username and password
-            }            
+            }
 
             if (result.Succeeded)
             {
-                return Ok(new { Message = "User registered successfully" });
+                user = await _userManager.FindByEmailAsync(model.Email);
+                var token = GenerateJwtToken(user);
+
+                LoginResult requestResult = new LoginResult()
+                {
+                    IsSuccess = true,
+                    Token = token,
+                    UserIdentity = new UserIdentity()
+                    {
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    }
+                };
+                return Ok(requestResult);
             }
 
+            // Check for duplicate username error
+            if (result.Errors.Any(e => e.Code == "DuplicateUserName"))
+            {
+                return Conflict(new { Message = "User with this email already exists." });
+            }
+
+            // Return other errors
             return BadRequest(result.Errors);
         }
 
@@ -53,12 +74,23 @@ namespace POS.Identity.API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-
+            
             if (result.Succeeded)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 var token = GenerateJwtToken(user);
-                return Ok(new { Token = token });
+                LoginResult requestResult = new LoginResult()
+                {
+                    IsSuccess = result.Succeeded,
+                    Token = token,
+                    UserIdentity = new UserIdentity()
+                    {
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    }
+                };
+                return Ok(requestResult);
             }
 
             return Unauthorized();
@@ -89,7 +121,19 @@ namespace POS.Identity.API.Controllers
                 }
 
                 var token = GenerateJwtToken(user);
-                return Ok(new { Token = token });
+
+                LoginResult requestResult = new LoginResult()
+                {
+                    IsSuccess = true,
+                    Token = token,
+                    UserIdentity = new UserIdentity()
+                    {
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName
+                    }
+                };
+                return Ok(requestResult);
             }
             catch (Exception ex)
             {
@@ -99,9 +143,9 @@ namespace POS.Identity.API.Controllers
         }
 
         [HttpDelete("{username}")]
-        public async Task<IActionResult> Delete(string username)
+        public async Task<IActionResult> Delete(string email)
         {
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(email);
             if (user == null)
             {
                 return NotFound(new { Message = "User not found" });

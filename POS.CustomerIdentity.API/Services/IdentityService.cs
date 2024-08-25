@@ -23,8 +23,12 @@ namespace POS.CustomerIdentity.API.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<IdentityResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return new IdentityResult { IsSuccess = true, UserId = result.UserId };
+                    IdentityResult result = JsonSerializer.Deserialize<IdentityResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return result;
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    return new IdentityResult { IsSuccess = false, ErrorMessage = "User with this email already exists." };
                 }
                 else
                 {
@@ -39,13 +43,13 @@ namespace POS.CustomerIdentity.API.Services
             }
         }
 
-        public async Task DeleteIdentityAsync(string userId)
+        public async Task DeleteIdentityAsync(string email)
         {
-            var response = await _httpClient.DeleteAsync($"api/identity/{userId}");
+            var response = await _httpClient.DeleteAsync($"api/identity/{email}");
             response.EnsureSuccessStatusCode();
         }
 
-        public async Task<LoginResult> LoginAsync(LoginModel loginModel)
+        public async Task<IdentityResult> LoginAsync(LoginModel loginModel)
         {
             try
             {
@@ -55,18 +59,18 @@ namespace POS.CustomerIdentity.API.Services
                 if (response.IsSuccessStatusCode)
                 {
                     var responseContent = await response.Content.ReadAsStringAsync();
-                    var loginResult = JsonSerializer.Deserialize<LoginResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var loginResult = JsonSerializer.Deserialize<IdentityResult>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     loginResult.IsSuccess = response.IsSuccessStatusCode;
                     return loginResult;
                 }
 
                 var errorMessage = await response.Content.ReadAsStringAsync();
-                return new LoginResult { IsSuccess = false, ErrorMessage = errorMessage };
+                return new IdentityResult { IsSuccess = false, ErrorMessage = errorMessage };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception: {ex.Message}");
-                return new LoginResult { IsSuccess = false, ErrorMessage = ex.Message };
+                return new IdentityResult { IsSuccess = false, ErrorMessage = ex.Message };
             }
         }
 

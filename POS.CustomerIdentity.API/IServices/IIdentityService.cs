@@ -7,7 +7,7 @@ namespace POS.CustomerIdentity.API.IServices
     {
         Task<IdentityResult> RegisterIdentityAsync(RegisterModel registerModel);
         Task DeleteIdentityAsync(string userId);
-        Task<LoginResult> LoginAsync(LoginModel loginModel);
+        Task<IdentityResult> LoginAsync(LoginModel loginModel);
         Task<bool> IdentityExistsAsync(string email);
         Task<LoginResult> GoogleLoginAsync(GoogleLoginModel googleLoginModel);
     }

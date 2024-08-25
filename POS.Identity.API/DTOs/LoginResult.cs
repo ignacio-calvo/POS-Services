@@ -1,6 +1,6 @@
-﻿namespace POS.CustomerIdentity.API.Models
+﻿namespace POS.Identity.API.DTOs
 {
-    public class IdentityResult
+    public class LoginResult
     {
         public bool IsSuccess { get; set; }
         public string Token { get; set; }

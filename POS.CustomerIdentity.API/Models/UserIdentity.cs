@@ -1,6 +1,6 @@
-﻿namespace POS.Identity.API.DTOs
+﻿namespace POS.CustomerIdentity.API.Models
 {
-    public class RegisterModel
+    public class UserIdentity
     {
         public string Email { get; set; }
         public string? Password { get; set; } // This can be null when the user logs in with SSO like Google

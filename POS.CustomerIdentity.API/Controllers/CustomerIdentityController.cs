@@ -28,9 +28,13 @@ namespace POS.CustomerIdentity.API.Controllers
                 {
                     return Ok(loginResult);
                 }
+                else if (loginResult.ErrorMessage == "User with this email already exists.")
+                {
+                    return Conflict(new { Message = loginResult.ErrorMessage });
+                }
                 else
                 {
-                    return StatusCode(StatusCodes.Status400BadRequest, loginResult);
+                    return BadRequest(loginResult);
                 }
             }
             catch (Exception ex)
